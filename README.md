@@ -1,2 +1,2 @@
 # ControlThinker
-Coming Soooon!
+Coming Soon!
