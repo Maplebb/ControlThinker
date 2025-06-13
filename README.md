@@ -12,7 +12,7 @@
 >
 > We introduce ControlThinker, a novel framework bridging the semantic gap in controllable image generation through enhanced visual reasoning. ControlThinker employs a "comprehend-then-generate" paradigm. It utilizes a Multimodal Large Language Model (MLLM) specifically enhanced via supervised and reinforcement fine-tuning to extract latent semantics from control images, generating enriched prompts that significantly enhance visual quality and semantic coherence of generated images without modifying image generators. Extensive experiments across various control types confirm ControlThinker's effectiveness.
 
-<p align="center"><img src="asset/image/teaser.pdf" width="95%"></p>
+<p align="center"><img src="asset/image/teaser.png" width="95%"></p>
 
 ## 📢 News
 
