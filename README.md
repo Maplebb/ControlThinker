@@ -71,7 +71,7 @@ To extract original prompts:
 python ControlAR/autoregressive/train/extract_file_caption.py --data-path /dir_of_MultiGen_or_COCOStuff_parquet_files --output-path /json_of_ori_prompts --split validation --dataset multigen/cocostuff
 ```
 ## 🚀 Inference
-**First Download the Checkpoints on Huggingface.**
+**First Download the Checkpoints on [huggingface](https://huggingface.co/maplebb/ControlThinker).**
 ## 1. Visual reasoning to generate enhanced prompts
 ### 1.1 Generate control images
 ```
