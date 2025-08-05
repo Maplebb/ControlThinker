@@ -68,7 +68,7 @@ python ControlAR/autoregressive/test/extract_files_from_cocostuff_data.py --data
 ```
 To extract original prompts:
 ```
-python ControlAR/autoregressive/train/extract_file_caption.py --data-path /dir_of_MultiGen_or_COCOStuff_parquet_fils --output-path /json_of_ori_prompts --split validation --dataset multigen/cocostuff
+python ControlAR/autoregressive/train/extract_file_caption.py --data-path /dir_of_MultiGen_or_COCOStuff_parquet_files --output-path /json_of_ori_prompts --split validation --dataset multigen/cocostuff
 ```
 ## 🚀 Inference
 **First Download the Checkpoints on Huggingface.**
