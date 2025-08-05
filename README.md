@@ -16,6 +16,7 @@
 
 ## 📢 News
 
+- **August 5, 2025:** We have released the inference code.
 - **July 15, 2025:** We have released our checkpoints on huggingface.
 - **June 2, 2025:** We have released the paper of ControlThinker.
 - **May 30, 2025:** The codes and models are coming soon.
@@ -88,7 +89,7 @@ python -u generate_formatted_dataset_think \
 --condition_type hed/depth/canny/lineart/segmentation \
 --repeat 1
 ```
-#### organized the input_json in the format of
+#### For self-constructed data, organized the input_json in the format of
 ```
 {
   "image_name1": "original_prompt1",
