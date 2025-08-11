@@ -38,11 +38,26 @@ git clone https://github.com/open-mmlab/mmsegmentation.git
 
 ## Preparing Datasets
 First download the vq_ds16_t2i.pt, flan-t5-xl model **from ControlAR**
+### For training
+Download
+```
+train-00000-of-02403.parquet
+..
+train-00020-of-02403.parquet
+```
+of [MultiGen-20M](https://huggingface.co/datasets/limingcv/MultiGen-20M_depth)( ~10GB) and save the .parquet files to a same directory
+Download
+```
+train-00000-of-00248.parquet
+..
+train-000040-of-00248.parquet
+```
+of [COCOStuff with caption](https://huggingface.co/datasets/limingcv/Captioned_COCOStuff)( ~10GB) and save the .parquet files to a same directory
+
 ### For evaluation
 Download
 ```
 validation-00000-of-00005.parquet
-validation-00001-of-00005.parquet
 ..
 validation-00004-of-00005.parquet
 ```
@@ -51,52 +66,100 @@ of [MultiGen-20M](https://huggingface.co/datasets/limingcv/MultiGen-20M_depth)( 
 Download
 ```
 validation-00000-of-00011.parquet
-validation-00001-of-00011.parquet
 ..
 validation-000010-of-00011.parquet
 ```
 of [COCOStuff with caption](https://huggingface.co/datasets/limingcv/Captioned_COCOStuff)( ~2GB) and save the .parquet files to a same directory
 
-#### Data extraction
+### Data extraction
 For MultiGen-20M
 ```
-python ControlAR/autoregressive/test/extract_files_from_multigen_data.py --data-path /dir_of_MultiGen_parquet_fils --code-path /path_of_output_dir --vq-ckpt /path_of_vq_ds16_t2i --t5-path /parent_dir_of_flant5xl --split validation
+python ControlAR/autoregressive/test/extract_files_from_multigen_data.py --data-path /dir_of_MultiGen_parquet_fils --code-path /path_of_output_dir --vq-ckpt /path_of_vq_ds16_t2i --t5-path /parent_dir_of_flant5xl --split train/validation
 ```
 For Captioned_COCOStuff
 ```
-python ControlAR/autoregressive/test/extract_files_from_cocostuff_data.py --data-path /dir_of_COCOStuff_parquet_fils --code-path /path_of_output_dir --vq-ckpt /path_of_vq_ds16_t2i --t5-path /parent_dir_of_flant5xl --split validation
+python ControlAR/autoregressive/test/extract_files_from_cocostuff_data.py --data-path /dir_of_COCOStuff_parquet_fils --code-path /path_of_output_dir --vq-ckpt /path_of_vq_ds16_t2i --t5-path /parent_dir_of_flant5xl --split train/validation
 ```
 To extract original prompts:
 ```
 python ControlAR/autoregressive/train/extract_file_caption.py --data-path /dir_of_MultiGen_or_COCOStuff_parquet_files --output-path /json_of_ori_prompts --split validation --dataset multigen/cocostuff
 ```
-## 🚀 Inference
-**First Download the Checkpoints on [huggingface](https://huggingface.co/maplebb/ControlThinker).**
-## 1. Visual reasoning to generate enhanced prompts
-### 1.1 Generate control images
+Place the JSON file of the original prompt in the directory of extracted data and name it `captions.json`
+
+## 🚀 Train
+
+
+
+### First stage: SFT with curated data
+
+We adopt [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) for SFT.
+
+### Second stage: Reinforcement Learning
+
+#### Generate control images
 ```
 python ControlAR/condition/hed_batch.py --input_folder /path_of_ori_images --output_folder /path_of_control_images
 ```
 You can change `hed` to `lineart/canny`.
 
 For `depth` and `segmentation`, they are provided by the dataset.
-### 1.2 Generate the Formatted Input
+
+Place the directory of control images in the directory of extracted data.
+
+#### Generate the Formatted Input
 ```
 python -u generate_formatted_dataset_think \
 --input_json /json_of_ori_prompts \
 --image_dir /path_of_control_images\
 --output_json /path_of_formatted_input \
 --condition_type hed/depth/canny/lineart/segmentation \
---repeat 1
 ```
-#### For self-constructed data, organized the input_json in the format of
+#### Start training
+Replace `ms-swift/swift/trainers/rlhf_trainer/grpo_trainer.py` with `train/reinforcement-learning/controlthinker_trainer.py`
+
 ```
-{
-  "image_name1": "original_prompt1",
-  "image_name2": "original_prompt2",
-  ...
-}
+export MASTER_PORT=29501
+CUDA_VISIBLE_DEVICES=6,7 \
+NPROC_PER_NODE=2 \
+swift rlhf \
+    --rlhf_type grpo \
+    --model /path_of_model \
+    --train_type lora \
+    --lora_rank 64 \
+    --lora_alpha 128 \
+    --target_modules all-linear \
+    --torch_dtype bfloat16 \
+    --dataset /path_of_formatted_input \
+    --max_completion_length 1024 \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size 6 \
+    --per_device_eval_batch_size 6 \
+    --learning_rate 1e-5 \
+    --gradient_accumulation_steps 1 \
+    --eval_steps 10000 \
+    --save_steps 800 \
+    --save_total_limit 10 \
+    --logging_steps 1 \
+    --max_length 4096 \
+    --output_dir /dir_of_output_checkpoints \
+    --max_steps 2400 \
+    --warmup_ratio 0.05 \
+    --dataloader_num_workers 4 \
+    --dataset_num_proc 4 \
+    --num_generations 12 \
+    --temperature 0.9 \
+    --deepspeed zero2 \
+    --report_to wandb \
+    --log_completions true 
 ```
+
+## 🎳 Inference
+**First Download the Checkpoints on [huggingface](https://huggingface.co/maplebb/ControlThinker).**
+## 1. Visual reasoning to generate enhanced prompts
+### 1.1 Generate control images
+**The same as the Second Stage Training**
+### 1.2 Generate the Formatted Input
+**The same as the Second Stage Training**
 ### 1.3 Generate the Responses (Ms-Swift)
 ```
 MAX_PIXELS=1003520 \
@@ -149,6 +212,31 @@ For segmentation
 python -u ./ControlAR/autoregressive/test/generate_image_with_new_prompt.py --condition_type seg --vq_ckpt /path_of_vq_ds16_t2i --gpt_ckpt /path_of_seg_cocostuff.safetensors --code_path /path_of_multigen_data --gpt_model GPT-XL --image_size 512 --sample_dir /dir_of_output_images  --seed 0 --per_proc_batch_size 16 --text_embedding_dir /dir_of_new_text_embeddings --t5_path /dir_of_flant5xl_model
 ```
 
+## 3. Inference time scaling
+
+### 3.1 Generate control images
+
+```
+python ControlAR/condition/hed_batch.py --input_folder /path_of_generated_images --output_folder /path_of_control_images
+```
+You can change `hed` to `lineart/canny/depth/seg`.
+
+### 3.2 Pick with quality and text and control signal alignment score
+
+```
+python -u inference_scaling.py --ctl_gt_folder /path_of_ground_truth_control_image \
+--ctl_candidates_folder /path_of_generated_control_image \
+--img_candidates_folder /path_of_generated_image \
+--output_folder /path_of_picked_image
+```
+
+## 🏆 Evaluation
+
+Download DeepLabV3([weight](https://download.openmmlab.com/mmsegmentation/v0.5/deeplabv3/deeplabv3_r101-d8_512x512_4x4_320k_coco-stuff164k/deeplabv3_r101-d8_512x512_4x4_320k_coco-stuff164k_20210709_155402-3cbca14d.pth)) and save it to `evaluations/`.
+
+Refer to `ControlAR/condition/README.md` for preparing `dpt` model.
+
+Run scripts in `ControlAR/evaluations` to calculate matrices
 
 ## 📝 TODO
 

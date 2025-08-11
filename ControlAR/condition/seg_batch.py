@@ -49,7 +49,7 @@ if __name__ == '__main__':
     output_folder = args.output_folder
 
     config_file = 'mmsegmentation/configs/deeplabv3/deeplabv3_r101-d8_4xb4-320k_coco-stuff164k-512x512.py'
-    checkpoint_file = '/root/ControlAR/evaluations/deeplabv3_r101-d8_512x512_4x4_320k_coco-stuff164k_20210709_155402-3cbca14d.pth'
+    checkpoint_file = 'ControlAR/evaluations/deeplabv3_r101-d8_512x512_4x4_320k_coco-stuff164k_20210709_155402-3cbca14d.pth'
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 

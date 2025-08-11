@@ -11,6 +11,7 @@ current_directory = os.getcwd()
 sys.path.append(current_directory)
 from autoregressive.test.metric import RMSE
 import torch.nn.functional as F
+import argparse
 # Define a dataset class for loading image and label pairs
 class ImageDataset(Dataset):
     def __init__(self, img_dir, label_dir):
@@ -33,9 +34,13 @@ class ImageDataset(Dataset):
 processor = DPTImageProcessor.from_pretrained("condition/ckpts/dpt_large")
 model = DPTForDepthEstimation.from_pretrained("condition/ckpts/dpt_large").cuda()
 
-# Define the dataset and data loader
-img_dir = 'sample/multigen/depth/visualization'
-label_dir = 'sample/multigen/depth/annotations'
+parser = argparse.ArgumentParser(description='Evaluate Canny F1 Score')
+parser.add_argument('--img_dir', type=str, required=True, help='Directory of images')
+parser.add_argument('--label_dir', type=str, required=True, help='Directory of labels')
+args = parser.parse_args()
+
+img_dir = args.img_dir
+label_dir = args.label_dir
 dataset = ImageDataset(img_dir, label_dir)
 data_loader = DataLoader(dataset, batch_size=16, shuffle=False, num_workers=4)
 

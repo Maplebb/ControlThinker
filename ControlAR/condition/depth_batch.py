@@ -14,7 +14,7 @@ parser.add_argument("--start_idx", type=int, default=0, help="Start index of ima
 parser.add_argument("--end_idx", type=int, default=1000000, help="End index of images to process.")
 parser.add_argument("--input_folder", required=True, type=str, help="Path to input folder containing images")
 parser.add_argument("--output_folder", required=True,type=str, help="Path to output folder for processed images")
-parser.add_argument("--dpt-large-path", required=True,type=str, help="Path to output folder for processed images")
+parser.add_argument("--dpt-large-path", required=True,type=str, help="Path to dpt model")
 args = parser.parse_args()
 input_folder = args.input_folder
 output_folder = args.output_folder

@@ -14,6 +14,7 @@ import torch.nn.functional as F
 from condition.hed import HEDdetector
 from condition.canny import CannyDetector
 from torchmetrics.classification import BinaryF1Score
+import argparse
 # Define a dataset class for loading image and label pairs
 class ImageDataset(Dataset):
     def __init__(self, img_dir, label_dir):
@@ -33,9 +34,14 @@ class ImageDataset(Dataset):
         return torch.from_numpy(image), torch.from_numpy(label).permute(2, 0, 1)
 
 model = CannyDetector()
-# Define the dataset and data loader
-img_dir = 'sample/multigen/canny/visualization'
-label_dir = 'sample/multigen/canny/annotations'
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Evaluate Canny F1 Score')
+parser.add_argument('--img_dir', type=str, required=True, help='Directory of images')
+parser.add_argument('--label_dir', type=str, required=True, help='Directory of labels')
+args = parser.parse_args()
+
+img_dir = args.img_dir
+label_dir = args.label_dir
 dataset = ImageDataset(img_dir, label_dir)
 data_loader = DataLoader(dataset, batch_size=16, shuffle=False, num_workers=4)
 

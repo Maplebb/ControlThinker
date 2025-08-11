@@ -1,2 +1,3 @@
 ms-swift==3.3.0
 qwen-vl-utils==0.0.10
+lpips==0.1.4

@@ -14,6 +14,7 @@ import torch.nn.functional as F
 from condition.hed import HEDdetector
 from torchmetrics.image import MultiScaleStructuralSimilarityIndexMeasure
 from condition.lineart import LineArt
+import argparse
 # Define a dataset class for loading image and label pairs
 class ImageDataset(Dataset):
     def __init__(self, img_dir, label_dir):
@@ -33,11 +34,15 @@ class ImageDataset(Dataset):
         return torch.from_numpy(image), torch.from_numpy(label).permute(2, 0, 1)
 
 model = LineArt()
-model.load_state_dict(torch.load('condition/ckpts/model.pth', map_location=torch.device('cpu')))
+model.load_state_dict(torch.load('condition/ckpts/lineart_model.pth', map_location=torch.device('cpu')))
 model.cuda()
-# Define the dataset and data loader
-img_dir = 'sample/multigen/lineart/visualization'
-label_dir = 'sample/multigen/lineart/annotations'
+parser = argparse.ArgumentParser(description='Evaluate Canny F1 Score')
+parser.add_argument('--img_dir', type=str, required=True, help='Directory of images')
+parser.add_argument('--label_dir', type=str, required=True, help='Directory of labels')
+args = parser.parse_args()
+
+img_dir = args.img_dir
+label_dir = args.label_dir
 dataset = ImageDataset(img_dir, label_dir)
 data_loader = DataLoader(dataset, batch_size=16, shuffle=False, num_workers=4)
 
@@ -46,8 +51,8 @@ ssim_score = []
 with torch.no_grad():
     for images, labels in tqdm(data_loader):
         images = images.permute(0,3,1,2).cuda()
-        outputs = model(images.float())*255
-        predicted_hed = outputs
+        outputs = model(images.float())
+        predicted_hed = (1-outputs)*255
         labels = labels[:, 0:1, :, :].cuda()
         ssim_score.append(ssim((predicted_hed/255.0).clip(0,1), (labels/255.0).clip(0,1)))
 

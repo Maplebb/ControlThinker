@@ -1,5 +1,6 @@
 from cleanfid import fid
 import argparse
+import torch
 
 def main(args):
     real_data_path = args.val_images

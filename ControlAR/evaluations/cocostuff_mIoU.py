@@ -5,20 +5,25 @@ import torch
 from PIL import Image
 from sklearn.metrics import confusion_matrix
 from torchmetrics import JaccardIndex
+import argparse
 
 def main():
     config_file = 'mmsegmentation/configs/deeplabv3/deeplabv3_r101-d8_4xb4-320k_coco-stuff164k-512x512.py'
     checkpoint_file = 'evaluations/deeplabv3_r101-d8_512x512_4x4_320k_coco-stuff164k_20210709_155402-3cbca14d.pth'
     
     # build the model from a config file and a checkpoint file
-    model = init_model(config_file, checkpoint_file, device='cuda:1')
-    
-    # Image and segmentation labels directories
-    img_dir = 'sample/cocostuff/visualization'
-    ann_dir = 'sample/cocostuff/annotations'
-    
-    # List all image files
-    img_fns = [f for f in sorted(os.listdir(img_dir)) if f.endswith(".png")]
+    model = init_model(config_file, checkpoint_file, device='cuda:0')
+    parser = argparse.ArgumentParser(description='Evaluate Canny F1 Score')
+    parser.add_argument('--img_dir', type=str, required=True, help='Directory of images')
+    parser.add_argument('--label_dir', type=str, required=True, help='Directory of labels')
+    args = parser.parse_args()
+
+    img_dir = args.img_dir
+    label_dir = args.label_dir
+
+    # List all image files(first 500)
+    img_fns = [f for f in sorted(os.listdir(img_dir)) if f.endswith(".png")][:500]
+
 
     
     total_mIoU = 0
@@ -35,7 +40,7 @@ def main():
         #     continue
         try:
             img_path = os.path.join(img_dir, img_fn)
-            ann_path = os.path.join(ann_dir, img_fn)
+            ann_path = os.path.join(label_dir, img_fn)
             result = inference_model(model, img_path)
         except Exception as e:
             continue
