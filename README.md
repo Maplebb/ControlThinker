@@ -115,7 +115,7 @@ python -u generate_formatted_dataset_think \
 --condition_type hed/depth/canny/lineart/segmentation \
 ```
 #### Start training
-Replace `ms-swift/swift/trainers/rlhf_trainer/grpo_trainer.py` with `train/reinforcement-learning/controlthinker_trainer.py`
+Replace the content of `ms-swift/swift/trainers/rlhf_trainer/grpo_trainer.py` with `train/reinforcement-learning/controlthinker_trainer.py`
 
 ```
 export MASTER_PORT=29501
